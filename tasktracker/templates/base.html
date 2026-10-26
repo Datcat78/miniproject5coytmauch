@@ -14,8 +14,14 @@
       <li><a href="{{ url_for('about') }}">About</a></li>
       {% if g.user %}
         <li><a href="{{ url_for('tasks.dashboard') }}">Dashboard</a></li>
+        <li><a href="{{ url_for('tasks.new') }}">Add Task</a></li>
         <li><span class="nav-user">{{ g.user['username'] }}</span></li>
-        <li><a href="{{ url_for('auth.logout') }}">Log Out</a></li>
+        <li>
+          {# Logging out changes state, so it's a POST form instead of a link #}
+          <form action="{{ url_for('auth.logout') }}" method="post" class="nav-form">
+            <button type="submit">Log Out</button>
+          </form>
+        </li>
       {% else %}
         <li><a href="{{ url_for('auth.register') }}">Register</a></li>
         <li><a href="{{ url_for('auth.login') }}">Log In</a></li>

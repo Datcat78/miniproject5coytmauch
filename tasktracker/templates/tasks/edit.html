@@ -1,9 +1,36 @@
 {% extends 'base.html' %}
 
 {% block header %}
-  <h1>{% block title %}Edit "{{ task['title'] }}"{% endblock %}</h1>
+  <h1>{% block title %}Edit Task{% endblock %}</h1>
 {% endblock %}
 
 {% block content %}
-  <p class="placeholder">Placeholder: the form for editing a task will go here.</p>
+  {# After a failed submit, show what the user typed; otherwise show the saved task #}
+  {% set submitted = request.method == 'POST' %}
+  {% set title = request.form.get('title', '') if submitted else task['title'] %}
+  {% set description = request.form.get('description', '') if submitted else task['description'] %}
+  {% set is_complete = ('is_complete' in request.form) if submitted else task['is_complete'] %}
+
+  {# The browser checks these limits first; tasks.validate_task_form() checks them again on the server #}
+  <form method="post" class="form">
+    <label for="title">Title</label>
+    <input name="title" id="title" value="{{ title }}"
+           required maxlength="100" aria-describedby="title-help" autofocus>
+    <small id="title-help">Up to 100 characters.</small>
+
+    <label for="description">Description <span class="optional">(optional)</span></label>
+    <textarea name="description" id="description" maxlength="1000"
+              aria-describedby="description-help">{{ description }}</textarea>
+    <small id="description-help">Up to 1000 characters.</small>
+
+    <label class="checkbox">
+      <input type="checkbox" name="is_complete" value="1" {% if is_complete %}checked{% endif %}>
+      Completed
+    </label>
+
+    <div class="form-actions">
+      <button type="submit" class="button">Save Changes</button>
+      <a class="button button-secondary" href="{{ url_for('tasks.dashboard') }}">Cancel</a>
+    </div>
+  </form>
 {% endblock %}

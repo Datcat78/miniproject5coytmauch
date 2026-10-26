@@ -130,6 +130,14 @@ def test_logout(client, auth):
     assert response.headers["Location"] == "/"
 
 
+def test_logout_requires_post(client, auth):
+    auth.login()
+    assert client.get("/auth/logout").status_code == 405
+
+    with client.session_transaction() as sess:
+        assert sess["user_id"] == 1
+
+
 def test_nav_links(client, auth):
     response = client.get("/")
     assert b"Log In" in response.data

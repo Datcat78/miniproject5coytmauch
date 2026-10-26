@@ -12,26 +12,33 @@ list of tasks. The project follows the structure of the
 [official Flask tutorial](https://flask.palletsprojects.com/en/stable/tutorial/): it uses an application
 factory (`create_app()`), blueprints, and Jinja template inheritance.
 
-## Current status
+## Features
 
-- SQLite database with `users` and `tasks` tables, created by `flask --app tasktracker init-db`
-- User registration, login, and logout with Flask sessions and hashed passwords
-- A private dashboard that lists only the logged-in user's tasks
-- Not implemented yet: creating, editing, completing, and deleting tasks (the New Task and Edit Task
-  pages are protected placeholders)
+- Register, log in, and log out, with hashed passwords and Flask sessions
+- A private dashboard showing only your own tasks and how many you've completed
+- Add tasks with a title and an optional description
+- Edit a task's title, description, and completed status
+- Mark tasks complete or not complete with one click, and delete tasks
+- Green success and red error messages after every action
+- Every page, including error pages like 404 Not Found, extends `base.html`
 
 ## Pages
 
-| URL | Page | Login required |
-|---|---|---|
-| `/` | Home | No |
-| `/about` | About | No |
-| `/auth/register` | Register | No |
-| `/auth/login` | Log In | No |
-| `/auth/logout` | Log out, then go to Home | No |
-| `/tasks/` | Dashboard: your tasks | Yes |
-| `/tasks/new` | New Task (placeholder) | Yes |
-| `/tasks/<id>/edit` | Edit Task (placeholder) | Yes, and the task must be yours |
+| URL | Methods | What it does | Login required |
+|---|---|---|---|
+| `/` | GET | Home page | No |
+| `/about` | GET | About page | No |
+| `/auth/register` | GET, POST | Registration form; creates the account | No |
+| `/auth/login` | GET, POST | Login form; starts the session | No |
+| `/auth/logout` | POST | Ends the session, then goes to Home | No |
+| `/tasks/` | GET | Dashboard: your tasks | Yes |
+| `/tasks/new` | GET, POST | Add Task form; saves the new task | Yes |
+| `/tasks/<id>/edit` | GET, POST | Edit Task form; saves the changes | Yes, and it must be your task |
+| `/tasks/<id>/toggle` | POST | Marks the task complete or not complete | Yes, and it must be your task |
+| `/tasks/<id>/delete` | POST | Deletes the task | Yes, and it must be your task |
+
+Every action that changes data (logging out, toggling, deleting, and submitting forms) only accepts
+POST, so following a link can never change anything.
 
 ## Accounts and security
 
@@ -44,8 +51,14 @@ factory (`create_app()`), blueprints, and Jinja template inheritance.
   the secret key, so it can't be edited or forged.
 - **Private pages** use the `@login_required` decorator, which sends logged-out visitors to the login
   page.
-- **Users can only see their own tasks.** Task queries always filter by the logged-in user's id, and
-  opening another user's task gives a 404 Not Found.
+- **Users can only see and change their own tasks.** Every task query filters by the logged-in user's
+  id, which comes from the session and never from the form. Trying to view, edit, complete, or delete
+  another user's task gives a 404 Not Found.
+- **Task forms are validated on the server:** the title is required and up to 100 characters, and the
+  description is optional and up to 1000 characters.
+- **Parameterized SQL:** every query passes user input as `?` parameters, never by building SQL strings,
+  so input can't change the query.
+- **Jinja escapes everything it displays**, so HTML typed into a task can't run as code on the page.
 
 ### Secret key
 
@@ -77,10 +90,10 @@ connection, so SQLite rejects a task whose `user_id` doesn't match an existing u
 ```
 miniproject5coytmauch/
 ├── tasktracker/
-│   ├── __init__.py        # Application factory: create_app()
+│   ├── __init__.py        # Application factory: create_app(), Home, About, error pages
 │   ├── db.py              # SQLite connection helpers and the init-db command
 │   ├── auth.py            # Register, login, logout, and @login_required
-│   ├── tasks.py           # Private task pages (dashboard, new, edit)
+│   ├── tasks.py           # Dashboard, add, edit, complete, and delete tasks
 │   ├── schema.sql         # Creates the users and tasks tables
 │   ├── static/
 │   │   └── style.css
@@ -88,6 +101,7 @@ miniproject5coytmauch/
 │       ├── base.html      # Shared layout every page extends
 │       ├── home.html
 │       ├── about.html
+│       ├── error.html     # 404 and other error pages
 │       ├── auth/
 │       │   ├── register.html
 │       │   └── login.html
@@ -100,8 +114,8 @@ miniproject5coytmauch/
 │   ├── data.sql           # Two test users, each with one task
 │   ├── test_auth.py       # Tests for registration, login, and logout
 │   ├── test_db.py         # Tests for the database and init-db
-│   ├── test_factory.py    # Tests for the factory, secret key, Home, and About
-│   └── test_tasks.py      # Tests for login protection and task privacy
+│   ├── test_factory.py    # Tests for the factory, secret key, page layout, and error pages
+│   └── test_tasks.py      # Tests for every task action, validation, and task privacy
 ├── requirements.txt
 └── README.md
 ```

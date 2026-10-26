@@ -1,9 +1,25 @@
 {% extends 'base.html' %}
 
 {% block header %}
-  <h1>{% block title %}New Task{% endblock %}</h1>
+  <h1>{% block title %}Add Task{% endblock %}</h1>
 {% endblock %}
 
 {% block content %}
-  <p class="placeholder">Placeholder: the form for creating a task will go here.</p>
+  {# The browser checks these limits first; tasks.validate_task_form() checks them again on the server #}
+  <form method="post" class="form">
+    <label for="title">Title</label>
+    <input name="title" id="title" value="{{ request.form.get('title', '') }}"
+           required maxlength="100" aria-describedby="title-help" autofocus>
+    <small id="title-help">Up to 100 characters.</small>
+
+    <label for="description">Description <span class="optional">(optional)</span></label>
+    <textarea name="description" id="description" maxlength="1000"
+              aria-describedby="description-help">{{ request.form.get('description', '') }}</textarea>
+    <small id="description-help">Up to 1000 characters.</small>
+
+    <div class="form-actions">
+      <button type="submit" class="button">Add Task</button>
+      <a class="button button-secondary" href="{{ url_for('tasks.dashboard') }}">Cancel</a>
+    </div>
+  </form>
 {% endblock %}

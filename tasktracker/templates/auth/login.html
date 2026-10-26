@@ -14,7 +14,9 @@
     <input type="password" name="password" id="password"
            required autocomplete="current-password">
 
-    <button type="submit">Log In</button>
+    <div class="form-actions">
+      <button type="submit" class="button">Log In</button>
+    </div>
   </form>
   <p>Don't have an account? <a href="{{ url_for('auth.register') }}">Register</a>.</p>
 {% endblock %}

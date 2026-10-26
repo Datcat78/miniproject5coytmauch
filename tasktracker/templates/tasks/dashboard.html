@@ -2,11 +2,13 @@
 
 {% block header %}
   <h1>{% block title %}Dashboard{% endblock %}</h1>
-  <a class="action" href="{{ url_for('tasks.new') }}">New Task</a>
+  <a class="button action" href="{{ url_for('tasks.new') }}">Add Task</a>
 {% endblock %}
 
 {% block content %}
-  <p>Welcome, {{ g.user['username'] }}. These are your tasks.</p>
+  <p>Welcome, {{ g.user['username'] }}.
+    {%- if tasks %} You have completed {{ completed_count }} of {{ tasks|length }} tasks.{% endif %}</p>
+
   {% if tasks %}
     <ul class="task-list">
       {% for task in tasks %}
@@ -18,11 +20,26 @@
           {% if task['description'] %}
             <p>{{ task['description'] }}</p>
           {% endif %}
-          <a href="{{ url_for('tasks.edit', task_id=task['id']) }}">Edit</a>
+
+          {# Completing and deleting change data, so they're POST forms, not links #}
+          <div class="task-actions">
+            <form action="{{ url_for('tasks.toggle', task_id=task['id']) }}" method="post">
+              <button type="submit" class="button button-small">
+                {{ 'Mark not complete' if task['is_complete'] else 'Mark complete' }}
+              </button>
+            </form>
+            <a class="button button-small button-secondary"
+               href="{{ url_for('tasks.edit', task_id=task['id']) }}">Edit</a>
+            <form action="{{ url_for('tasks.delete', task_id=task['id']) }}" method="post"
+                  onsubmit="return confirm('Delete this task? This cannot be undone.');">
+              <button type="submit" class="button button-small button-danger">Delete</button>
+            </form>
+          </div>
         </li>
       {% endfor %}
     </ul>
   {% else %}
-    <p class="empty">You don't have any tasks yet.</p>
+    <p class="empty">You don't have any tasks yet.
+      <a href="{{ url_for('tasks.new') }}">Add your first task</a>.</p>
   {% endif %}
 {% endblock %}

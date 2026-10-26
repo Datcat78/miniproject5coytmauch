@@ -114,9 +114,13 @@ def load_logged_in_user():
         ).fetchone()
 
 
-@bp.route("/logout")
+@bp.route("/logout", methods=("POST",))
 def logout():
-    """Forget the logged-in user and go back to the home page."""
+    """Forget the logged-in user and go back to the home page.
+
+    Logging out changes state, so it only accepts POST: a link or image on
+    another site can't log the user out with a GET request.
+    """
     session.clear()
     flash("You have been logged out.", "success")
     return redirect(url_for("home"))

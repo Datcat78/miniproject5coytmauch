@@ -5,6 +5,7 @@
 import os
 
 from flask import Flask, render_template
+from werkzeug.exceptions import HTTPException
 
 
 def create_app(test_config=None):
@@ -37,6 +38,16 @@ def create_app(test_config=None):
     @app.route("/about")
     def about():
         return render_template("about.html")
+
+    @app.errorhandler(HTTPException)
+    def handle_http_error(error):
+        """Show errors like 404 Not Found inside the site's base layout."""
+        # Start from Werkzeug's response to keep its headers (a 405 lists the
+        # allowed methods), then swap in our page
+        response = error.get_response()
+        response.data = render_template("error.html", error=error)
+        response.content_type = "text/html; charset=utf-8"
+        return response
 
     # Database connection cleanup and the "flask init-db" command
     from . import db
