@@ -2,8 +2,27 @@
 
 {% block header %}
   <h1>{% block title %}Dashboard{% endblock %}</h1>
+  <a class="action" href="{{ url_for('tasks.new') }}">New Task</a>
 {% endblock %}
 
 {% block content %}
-  <p class="placeholder">Placeholder: your list of tasks will be shown here.</p>
+  <p>Welcome, {{ g.user['username'] }}. These are your tasks.</p>
+  {% if tasks %}
+    <ul class="task-list">
+      {% for task in tasks %}
+        <li class="task{% if task['is_complete'] %} task-complete{% endif %}">
+          <div class="task-heading">
+            <h2>{{ task['title'] }}</h2>
+            <span class="status">{{ 'Complete' if task['is_complete'] else 'Not complete' }}</span>
+          </div>
+          {% if task['description'] %}
+            <p>{{ task['description'] }}</p>
+          {% endif %}
+          <a href="{{ url_for('tasks.edit', task_id=task['id']) }}">Edit</a>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="empty">You don't have any tasks yet.</p>
+  {% endif %}
 {% endblock %}

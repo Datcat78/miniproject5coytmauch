@@ -2,10 +2,15 @@
 # Coyt Mauch
 # Mini Project 5
 
+import os
+
 import pytest
 
 from tasktracker import create_app
-from tasktracker.db import init_db
+from tasktracker.db import get_db, init_db
+
+with open(os.path.join(os.path.dirname(__file__), "data.sql"), "rb") as f:
+    _data_sql = f.read().decode("utf8")
 
 
 @pytest.fixture
@@ -18,6 +23,7 @@ def app(tmp_path):
 
     with app.app_context():
         init_db()
+        get_db().executescript(_data_sql)
 
     yield app
 
@@ -32,3 +38,23 @@ def client(app):
 def runner(app):
     """A runner for calling the app's Flask CLI commands."""
     return app.test_cli_runner()
+
+
+class AuthActions:
+    """Log the test client in and out."""
+
+    def __init__(self, client):
+        self._client = client
+
+    def login(self, username="test", password="test-password"):
+        return self._client.post(
+            "/auth/login", data={"username": username, "password": password}
+        )
+
+    def logout(self):
+        return self._client.get("/auth/logout")
+
+
+@pytest.fixture
+def auth(client):
+    return AuthActions(client)

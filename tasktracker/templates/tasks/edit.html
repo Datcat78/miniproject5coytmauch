@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 
 {% block header %}
-  <h1>{% block title %}Edit Task{% endblock %}</h1>
+  <h1>{% block title %}Edit "{{ task['title'] }}"{% endblock %}</h1>
 {% endblock %}
 
 {% block content %}

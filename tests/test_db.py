@@ -9,12 +9,6 @@ import pytest
 from tasktracker.db import get_db
 
 
-def add_user_and_task(db):
-    """Insert one user (id 1) and one task that belongs to them."""
-    db.execute("INSERT INTO users (username, password_hash) VALUES ('test', 'hash')")
-    db.execute("INSERT INTO tasks (user_id, title) VALUES (1, 'First task')")
-
-
 def test_get_close_db(app):
     with app.app_context():
         db = get_db()
@@ -44,8 +38,8 @@ def test_table_columns(app):
 def test_task_defaults(app):
     with app.app_context():
         db = get_db()
-        add_user_and_task(db)
-        task = db.execute("SELECT * FROM tasks WHERE id = 1").fetchone()
+        db.execute("INSERT INTO tasks (user_id, title) VALUES (1, 'Defaults task')")
+        task = db.execute("SELECT * FROM tasks WHERE title = 'Defaults task'").fetchone()
 
     assert task["user_id"] == 1
     assert task["description"] == ""
@@ -55,7 +49,6 @@ def test_task_defaults(app):
 def test_is_complete_must_be_0_or_1(app):
     with app.app_context():
         db = get_db()
-        add_user_and_task(db)
 
         with pytest.raises(sqlite3.IntegrityError, match="CHECK"):
             db.execute("UPDATE tasks SET is_complete = 2 WHERE id = 1")
@@ -70,20 +63,18 @@ def test_task_requires_existing_user(app):
 
 
 def test_cannot_delete_user_who_has_tasks(app):
+    # User 1 owns a task in tests/data.sql
     with app.app_context():
         db = get_db()
-        add_user_and_task(db)
 
         with pytest.raises(sqlite3.IntegrityError, match="FOREIGN KEY"):
             db.execute("DELETE FROM users WHERE id = 1")
 
 
 def test_init_db_command(app, runner):
-    # Save some data first, so we know init-db really clears it
+    # tests/data.sql already saved users and tasks, so check init-db clears them
     with app.app_context():
-        db = get_db()
-        add_user_and_task(db)
-        db.commit()
+        assert get_db().execute("SELECT COUNT(*) FROM tasks").fetchone()[0] > 0
 
     result = runner.invoke(args=["init-db"])
     assert result.exit_code == 0

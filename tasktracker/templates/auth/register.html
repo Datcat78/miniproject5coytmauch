@@ -5,5 +5,25 @@
 {% endblock %}
 
 {% block content %}
-  <p class="placeholder">Placeholder: the registration form will go here.</p>
+  {# The browser checks these rules first; auth.register() checks them again on the server #}
+  <form method="post" class="form">
+    <label for="username">Username</label>
+    <input name="username" id="username" value="{{ request.form.get('username', '') }}"
+           required minlength="3" maxlength="30" pattern="[A-Za-z0-9_]+"
+           title="Letters, numbers, and underscores only"
+           autocomplete="username" aria-describedby="username-help" autofocus>
+    <small id="username-help">3 to 30 characters: letters, numbers, and underscores.</small>
+
+    <label for="password">Password</label>
+    <input type="password" name="password" id="password"
+           required minlength="8" autocomplete="new-password" aria-describedby="password-help">
+    <small id="password-help">At least 8 characters.</small>
+
+    <label for="confirm_password">Confirm password</label>
+    <input type="password" name="confirm_password" id="confirm_password"
+           required minlength="8" autocomplete="new-password">
+
+    <button type="submit">Register</button>
+  </form>
+  <p>Already have an account? <a href="{{ url_for('auth.login') }}">Log in</a>.</p>
 {% endblock %}

@@ -10,6 +10,16 @@ def test_config():
     assert create_app({"TESTING": True}).testing
 
 
+def test_secret_key_defaults_to_dev(monkeypatch):
+    monkeypatch.delenv("SECRET_KEY", raising=False)
+    assert create_app({"TESTING": True}).config["SECRET_KEY"] == "dev"
+
+
+def test_secret_key_from_environment(monkeypatch):
+    monkeypatch.setenv("SECRET_KEY", "key-from-environment")
+    assert create_app({"TESTING": True}).config["SECRET_KEY"] == "key-from-environment"
+
+
 def test_home(client):
     response = client.get("/")
     assert response.status_code == 200

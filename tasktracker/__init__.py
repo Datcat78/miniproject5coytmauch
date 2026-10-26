@@ -11,9 +11,13 @@ def create_app(test_config=None):
     """Application factory: create and configure the Task Tracker app."""
     app = Flask(__name__, instance_relative_config=True)
     app.config.from_mapping(
-        # "dev" is only for local development; override it in instance/config.py
-        SECRET_KEY="dev",
+        # The secret key signs the session cookie. "dev" is a development-only
+        # fallback: set the SECRET_KEY environment variable to a long random
+        # value anywhere the app is actually deployed.
+        SECRET_KEY=os.environ.get("SECRET_KEY", "dev"),
         DATABASE=os.path.join(app.instance_path, "tasktracker.sqlite"),
+        # Don't send the session cookie with form posts from other websites
+        SESSION_COOKIE_SAMESITE="Lax",
     )
 
     if test_config is None:
@@ -39,7 +43,7 @@ def create_app(test_config=None):
 
     db.init_app(app)
 
-    # Blueprints for the account and task pages (routes are added in later steps)
+    # Blueprints for the account pages and the private task pages
     from . import auth, tasks
 
     app.register_blueprint(auth.bp)

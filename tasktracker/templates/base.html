@@ -12,6 +12,14 @@
     <ul>
       <li><a href="{{ url_for('home') }}">Home</a></li>
       <li><a href="{{ url_for('about') }}">About</a></li>
+      {% if g.user %}
+        <li><a href="{{ url_for('tasks.dashboard') }}">Dashboard</a></li>
+        <li><span class="nav-user">{{ g.user['username'] }}</span></li>
+        <li><a href="{{ url_for('auth.logout') }}">Log Out</a></li>
+      {% else %}
+        <li><a href="{{ url_for('auth.register') }}">Register</a></li>
+        <li><a href="{{ url_for('auth.login') }}">Log In</a></li>
+      {% endif %}
     </ul>
   </nav>
 
@@ -19,8 +27,8 @@
     <header>
       {% block header %}{% endblock %}
     </header>
-    {% for message in get_flashed_messages() %}
-      <div class="flash">{{ message }}</div>
+    {% for category, message in get_flashed_messages(with_categories=true) %}
+      <div class="flash flash-{{ category }}" role="alert">{{ message }}</div>
     {% endfor %}
     {% block content %}{% endblock %}
   </main>
