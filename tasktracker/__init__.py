@@ -34,6 +34,11 @@ def create_app(test_config=None):
     def about():
         return render_template("about.html")
 
+    # Database connection cleanup and the "flask init-db" command
+    from . import db
+
+    db.init_app(app)
+
     # Blueprints for the account and task pages (routes are added in later steps)
     from . import auth, tasks
 

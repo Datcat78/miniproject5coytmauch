@@ -14,11 +14,23 @@ factory (`create_app()`), blueprints, and Jinja template inheritance.
 
 ## Current status
 
-This is the initial project structure.
-
 - Working pages: **Home** (`/`) and **About** (`/about`)
+- SQLite database with `users` and `tasks` tables, created by `flask --app tasktracker init-db`
 - Placeholder templates (no routes yet): Register, Log In, Dashboard, New Task, Edit Task
-- Not implemented yet: the database, user accounts, and task management
+- Not implemented yet: user accounts and task management
+
+## Database
+
+The database is a SQLite file at `instance/tasktracker.sqlite`. It is not committed to Git; each copy
+of the project creates its own with `init-db`.
+
+| Table | Columns |
+|---|---|
+| `users` | `id` (primary key), `username` (unique), `password_hash` |
+| `tasks` | `id` (primary key), `user_id` (foreign key to `users.id`), `title`, `description`, `is_complete` (0 or 1) |
+
+Every task belongs to one user through `tasks.user_id`. Foreign key enforcement is turned on for every
+connection, so SQLite rejects a task whose `user_id` doesn't match an existing user.
 
 ## Project structure
 
@@ -26,10 +38,10 @@ This is the initial project structure.
 miniproject5coytmauch/
 ├── tasktracker/
 │   ├── __init__.py        # Application factory: create_app()
-│   ├── db.py              # Database helpers (placeholder)
+│   ├── db.py              # SQLite connection helpers and the init-db command
 │   ├── auth.py            # "auth" blueprint for accounts (placeholder)
 │   ├── tasks.py           # "tasks" blueprint for task pages (placeholder)
-│   ├── schema.sql         # Database schema (placeholder)
+│   ├── schema.sql         # Creates the users and tasks tables
 │   ├── static/
 │   │   └── style.css
 │   └── templates/
@@ -44,7 +56,8 @@ miniproject5coytmauch/
 │           ├── new.html
 │           └── edit.html
 ├── tests/
-│   ├── conftest.py        # pytest fixtures (app and client)
+│   ├── conftest.py        # pytest fixtures (app, client, and CLI runner)
+│   ├── test_db.py         # Tests for the database and init-db
 │   └── test_factory.py    # Tests for the factory, Home, and About
 ├── requirements.txt
 └── README.md
@@ -68,6 +81,15 @@ These commands are for Windows PowerShell, run from the project folder.
    ```powershell
    pip install Flask pytest
    ```
+
+3. Create the database:
+
+   ```powershell
+   flask --app tasktracker init-db
+   ```
+
+   This creates `instance/tasktracker.sqlite`. Running it again deletes all users and tasks and
+   starts over with empty tables.
 
 ## Running the app
 
