@@ -1,0 +1,3 @@
+-- Task Tracker database schema
+-- Placeholder: the user and task tables will be defined here when the
+-- database is implemented.

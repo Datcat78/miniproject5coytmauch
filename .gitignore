@@ -1,0 +1,61 @@
+# --- Virtual environments ---
+.venv/
+venv/
+env/
+ENV/
+
+# --- Python bytecode and caches ---
+__pycache__/
+*.py[cod]
+*$py.class
+
+# --- Flask ---
+# instance/ holds the local SQLite database and instance config (may contain secrets)
+instance/
+.webassets-cache
+flask_session/
+
+# --- Secrets and environment variables ---
+.env
+.env.*
+!.env.example
+.flaskenv.local
+*.pem
+*.key
+
+# --- Local databases ---
+*.db
+*.sqlite
+*.sqlite3
+
+# --- Testing and coverage ---
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+coverage.xml
+
+# --- Linters and type checkers ---
+.mypy_cache/
+.ruff_cache/
+
+# --- Packaging / build output ---
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# --- Logs ---
+*.log
+
+# --- IDEs and editors ---
+.idea/
+.vscode/
+*.swp
+
+# --- OS files ---
+.DS_Store
+Thumbs.db
+desktop.ini
