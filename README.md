@@ -103,12 +103,11 @@ Run these commands in **Windows PowerShell**, one at a time.
 **1. Get the project and open its folder.**
 
 ```powershell
-git clone <your-repository-url>
+git clone https://github.com/Datcat78/miniproject5coytmauch.git
 cd miniproject5coytmauch
 ```
 
-Replace `<your-repository-url>` with this repository's GitHub URL, or download the ZIP from GitHub and
-open PowerShell in the extracted folder.
+Or download the ZIP from GitHub and open PowerShell in the extracted folder.
 
 **2. Create a virtual environment.**
 
@@ -477,13 +476,31 @@ Claude Code did not make any Git commits. I made every commit myself.
 
 ### My own work, testing, and decisions
 
-> *Coyt: write this section yourself before submitting, in your own words. Replace these prompts.*
+Project Planning
 
-- *How I planned the project, and why I chose a task manager.*
-- *What I asked for in each step, and what I reviewed, changed, or rejected in Claude Code's work.*
-- *How I tested the app myself: what I tried in the browser, and anything that didn't work at first.*
-- *Decisions I made, and why.*
-- *What I learned about Flask, SQLite, authentication, testing, or working with an AI assistant.*
+I chose to create a Task Manager application because I wanted to make something simple, useful, and easy to understand. I thought it would be a good way to learn Flask while meeting the assignment requirements. My goal was to create a website where users could register, log in, and manage their own tasks.
+
+How I Used Claude Code
+
+I used Claude Code to help me build the project step by step. I asked it to create the Flask folder structure, set up the SQLite database, implement registration and login, and add the task management features. I also used it to help with the HTML templates, Bootstrap styling, and documentation. Breaking the project into smaller steps helped me better understand how the different parts of the application worked together.
+
+Reviewing and Changing the Code
+
+I used the assignment instructions to guide what I asked Claude Code to create. I focused on making sure the project included the required pages, database tables, forms, login system, and Bootstrap modal. I also worked through problems during setup instead of trying to complete everything at once.
+
+Testing and Troubleshooting
+
+One issue I encountered was getting an error saying "No module named flask" when trying to run the application. This helped me understand that Python packages need to be installed in the correct virtual environment.
+
+I also checked the application to make sure the features worked as expected.
+
+Decisions I Made
+
+I decided to use Flask because it was required for the assignment and was a good introduction to web development. I used SQLite because it was simple to set up and worked well for storing users and tasks. I also chose Bootstrap to make the website look more organized without having to write all the styling myself.
+
+What I Learned
+
+This project helped me better understand how Flask applications are organized and how different parts of a website work together. I learned more about using routes, HTML templates, databases, and user authentication. I also learned how important it is to test code and troubleshoot errors. Using Claude Code helped me work through the development process, but I still needed to understand the requirements and check that the project worked correctly.
 
 ## References
 
