@@ -1,31 +1,42 @@
 {% extends 'base.html' %}
 
+{% block page_class %}page-narrow{% endblock %}
+
 {% block header %}
-  <h1>{% block title %}Register{% endblock %}</h1>
+  <h1 class="h2 mb-0">{% block title %}Register{% endblock %}</h1>
 {% endblock %}
 
 {% block content %}
-  {# The browser checks these rules first; auth.register() checks them again on the server #}
-  <form method="post" class="form">
-    <label for="username">Username</label>
-    <input name="username" id="username" value="{{ request.form.get('username', '') }}"
-           required minlength="3" maxlength="30" pattern="[A-Za-z0-9_]+"
-           title="Letters, numbers, and underscores only"
-           autocomplete="username" aria-describedby="username-help" autofocus>
-    <small id="username-help">3 to 30 characters: letters, numbers, and underscores.</small>
+  <div class="card shadow-sm">
+    <div class="card-body p-4">
+      {# The browser checks these rules first; auth.register() checks them again on the server #}
+      <form method="post">
+        <div class="mb-3">
+          <label for="username" class="form-label">Username</label>
+          <input class="form-control" name="username" id="username"
+                 value="{{ request.form.get('username', '') }}"
+                 required minlength="3" maxlength="30" pattern="[A-Za-z0-9_]+"
+                 title="Letters, numbers, and underscores only"
+                 autocomplete="username" aria-describedby="username-help" autofocus>
+          <div id="username-help" class="form-text">3 to 30 characters: letters, numbers, and underscores.</div>
+        </div>
 
-    <label for="password">Password</label>
-    <input type="password" name="password" id="password"
-           required minlength="8" autocomplete="new-password" aria-describedby="password-help">
-    <small id="password-help">At least 8 characters.</small>
+        <div class="mb-3">
+          <label for="password" class="form-label">Password</label>
+          <input class="form-control" type="password" name="password" id="password"
+                 required minlength="8" autocomplete="new-password" aria-describedby="password-help">
+          <div id="password-help" class="form-text">At least 8 characters.</div>
+        </div>
 
-    <label for="confirm_password">Confirm password</label>
-    <input type="password" name="confirm_password" id="confirm_password"
-           required minlength="8" autocomplete="new-password">
+        <div class="mb-4">
+          <label for="confirm_password" class="form-label">Confirm password</label>
+          <input class="form-control" type="password" name="confirm_password" id="confirm_password"
+                 required minlength="8" autocomplete="new-password">
+        </div>
 
-    <div class="form-actions">
-      <button type="submit" class="button">Register</button>
+        <button type="submit" class="btn btn-primary w-100">Register</button>
+      </form>
     </div>
-  </form>
-  <p>Already have an account? <a href="{{ url_for('auth.login') }}">Log in</a>.</p>
+  </div>
+  <p class="text-center mt-3">Already have an account? <a href="{{ url_for('auth.login') }}">Log in</a>.</p>
 {% endblock %}

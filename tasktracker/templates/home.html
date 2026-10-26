@@ -1,17 +1,49 @@
 {% extends 'base.html' %}
 
-{% block header %}
-  <h1>{% block title %}Home{% endblock %}</h1>
-{% endblock %}
+{% block title %}Home{% endblock %}
 
 {% block content %}
-  <p>Welcome to Task Tracker, a simple website for keeping track of the things you need to get done.</p>
-  {% if g.user %}
-    <p>You're logged in as <strong>{{ g.user['username'] }}</strong>.
-       <a href="{{ url_for('tasks.dashboard') }}">Go to your dashboard</a> or
-       <a href="{{ url_for('tasks.new') }}">add a task</a>.</p>
-  {% else %}
-    <p><a href="{{ url_for('auth.register') }}">Create an account</a> or
-       <a href="{{ url_for('auth.login') }}">log in</a> to see your tasks.</p>
-  {% endif %}
+  <div class="p-4 p-md-5 mb-4 bg-body rounded-3 shadow-sm">
+    <h1 class="display-5 fw-bold">Welcome to Task Tracker</h1>
+    <p class="lead mb-4">A simple website for keeping track of the things you need to get done.</p>
+    {% if g.user %}
+      <p>You're logged in as <strong>{{ g.user['username'] }}</strong>.</p>
+      <div class="d-flex flex-wrap gap-2">
+        <a class="btn btn-primary btn-lg" href="{{ url_for('tasks.dashboard') }}">Go to your dashboard</a>
+        <a class="btn btn-outline-primary btn-lg" href="{{ url_for('tasks.new') }}">Add a task</a>
+      </div>
+    {% else %}
+      <div class="d-flex flex-wrap gap-2">
+        <a class="btn btn-primary btn-lg" href="{{ url_for('auth.register') }}">Create an account</a>
+        <a class="btn btn-outline-primary btn-lg" href="{{ url_for('auth.login') }}">Log in</a>
+      </div>
+    {% endif %}
+  </div>
+
+  <div class="row row-cols-1 row-cols-md-3 g-3">
+    <div class="col">
+      <div class="card h-100 shadow-sm">
+        <div class="card-body">
+          <h2 class="h5 card-title">Stay organized</h2>
+          <p class="card-text">Add tasks with a title and an optional description, and edit them any time.</p>
+        </div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="card h-100 shadow-sm">
+        <div class="card-body">
+          <h2 class="h5 card-title">Track your progress</h2>
+          <p class="card-text">Mark tasks complete with one click and see how much you've finished.</p>
+        </div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="card h-100 shadow-sm">
+        <div class="card-body">
+          <h2 class="h5 card-title">Private to you</h2>
+          <p class="card-text">Your tasks are tied to your account. Nobody else can see or change them.</p>
+        </div>
+      </div>
+    </div>
+  </div>
 {% endblock %}

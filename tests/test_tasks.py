@@ -51,6 +51,40 @@ def test_actions_require_login(client, app, path):
     assert task["is_complete"] == 0
 
 
+def task_routes(app):
+    """Every (method, URL) the tasks blueprint serves, using task 1 for <task_id>."""
+    for rule in app.url_map.iter_rules():
+        if rule.endpoint.startswith("tasks."):
+            for method in rule.methods - {"HEAD", "OPTIONS"}:
+                yield method, rule.rule.replace("<int:task_id>", "1")
+
+
+def test_every_task_route_requires_login(app, client):
+    # Read the routes from Flask itself, so a new route can't be forgotten here
+    routes = set(task_routes(app))
+    assert routes == {
+        ("GET", "/tasks/"),
+        ("GET", "/tasks/new"), ("POST", "/tasks/new"),
+        ("GET", "/tasks/1/edit"), ("POST", "/tasks/1/edit"),
+        ("POST", "/tasks/1/toggle"),
+        ("POST", "/tasks/1/delete"),
+    }
+
+    for method, url in sorted(routes):
+        response = client.open(url, method=method, data={"title": "Sneaky"})
+        assert response.status_code == 302, (method, url)
+        assert response.headers["Location"] == "/auth/login", (method, url)
+
+    assert count_tasks(app) == 2
+    assert get_task_row(app, 1)["title"] == OWN_TASK_TITLE
+
+
+@pytest.mark.parametrize("endpoint", ("tasks.toggle", "tasks.delete", "auth.logout"))
+def test_state_changing_routes_only_accept_post(app, endpoint):
+    rule = next(rule for rule in app.url_map.iter_rules() if rule.endpoint == endpoint)
+    assert rule.methods - {"HEAD", "OPTIONS"} == {"POST"}
+
+
 @pytest.mark.parametrize("path", ("/tasks/1/toggle", "/tasks/1/delete"))
 def test_actions_reject_get(client, auth, app, path):
     auth.login()
@@ -225,6 +259,68 @@ def test_delete_task(client, auth, app):
     assert b"You don't have any tasks yet." in response.data
 
 
+# --- Delete confirmation modal ---
+
+def test_delete_buttons_open_confirmation_modal(client, auth):
+    auth.login()
+    response = client.get("/tasks/")
+
+    # The Delete button only opens the modal, and carries this task's details
+    assert b'data-bs-toggle="modal" data-bs-target="#delete-task-modal"' in response.data
+    assert f'data-task-title="{OWN_TASK_TITLE}"'.encode() in response.data
+    assert b'data-delete-url="/tasks/1/delete"' in response.data
+
+    # There's one modal with a POST form, and no form that deletes without asking
+    assert response.data.count(b'id="delete-task-modal"') == 1
+    assert b'<form method="post" id="delete-task-form">' in response.data
+    assert b'action="/tasks/1/delete"' not in response.data
+
+
+def test_delete_modal_gets_each_tasks_own_url(client, auth):
+    auth.login()
+    client.post("/tasks/new", data={"title": "Second task"})
+    response = client.get("/tasks/")
+    assert b'data-delete-url="/tasks/1/delete"' in response.data
+    assert b'data-delete-url="/tasks/3/delete"' in response.data
+    assert b'data-task-title="Second task"' in response.data
+
+
+def test_delete_button_escapes_task_title(client, auth):
+    title = '"><img src=x onerror=alert(1)>'
+    auth.login()
+    client.post("/tasks/new", data={"title": title})
+    response = client.get("/tasks/")
+    assert b"<img src=x" not in response.data
+    assert b'data-task-title="' + page_text(title) + b'"' in response.data
+
+
+def test_no_delete_modal_without_tasks(client, auth):
+    auth.login()
+    client.post("/tasks/1/delete")
+    response = client.get("/tasks/")
+    assert b'id="delete-task-modal"' not in response.data
+
+
+# --- Bootstrap alerts ---
+
+def test_success_and_error_alerts(client, auth):
+    auth.login()
+
+    response = client.post("/tasks/new", data={"title": ""})
+    assert b'class="alert alert-danger alert-dismissible fade show" role="alert"' in response.data
+
+    client.post("/tasks/new", data={"title": "Buy milk"})
+    response = client.get("/tasks/")
+    assert b'class="alert alert-success alert-dismissible fade show" role="alert"' in response.data
+    assert b'data-bs-dismiss="alert" aria-label="Close"' in response.data
+
+
+def test_login_required_shows_info_alert(client):
+    response = client.get("/tasks/", follow_redirects=True)
+    assert b'class="alert alert-info alert-dismissible fade show"' in response.data
+    assert b"Please log in to see that page." in response.data
+
+
 # --- Ownership ---
 
 @pytest.mark.parametrize(("method", "path"), (
@@ -243,6 +339,31 @@ def test_cannot_touch_other_users_task(client, auth, app, method, path):
     task = get_task_row(app, 2)
     assert task["title"] == OTHER_TASK_TITLE
     assert task["is_complete"] == 0
+
+
+def test_other_user_cannot_touch_test_users_task(client, auth, app):
+    # The same protection, from the other side: "other" goes after task 1
+    auth.login("other", "other-password")
+
+    for method, path in (
+        ("GET", "/tasks/1/edit"),
+        ("POST", "/tasks/1/edit"),
+        ("POST", "/tasks/1/toggle"),
+        ("POST", "/tasks/1/delete"),
+    ):
+        response = client.open(path, method=method, data={"title": "Hijacked"})
+        assert response.status_code == 404, (method, path)
+        assert OWN_TASK_TITLE.encode() not in response.data
+
+    task = get_task_row(app, 1)
+    assert task["title"] == OWN_TASK_TITLE
+    assert task["is_complete"] == 0
+    assert task["user_id"] == 1
+
+    # "other" still sees only their own task
+    response = client.get("/tasks/")
+    assert OTHER_TASK_TITLE.encode() in response.data
+    assert OWN_TASK_TITLE.encode() not in response.data
 
 
 @pytest.mark.parametrize(("method", "path"), (

@@ -10,17 +10,41 @@ at Fort Hays State University.
 Task Tracker is a Flask web application where users register, log in, and manage their own private
 list of tasks. The project follows the structure of the
 [official Flask tutorial](https://flask.palletsprojects.com/en/stable/tutorial/): it uses an application
-factory (`create_app()`), blueprints, and Jinja template inheritance.
+factory (`create_app()`), blueprints, and Jinja template inheritance. It's styled with
+[Bootstrap 5.3](https://getbootstrap.com/docs/5.3/).
 
 ## Features
 
 - Register, log in, and log out, with hashed passwords and Flask sessions
-- A private dashboard showing only your own tasks and how many you've completed
+- A private dashboard of task cards, with a progress bar showing how many you've completed
 - Add tasks with a title and an optional description
 - Edit a task's title, description, and completed status
-- Mark tasks complete or not complete with one click, and delete tasks
-- Green success and red error messages after every action
+- Mark tasks complete or not complete with one click
+- Delete tasks after confirming in a pop-up dialog
+- Bootstrap alerts after every action: green for success, red for errors, blue for info
+- A responsive navigation bar that folds into a menu button on phones
 - Every page, including error pages like 404 Not Found, extends `base.html`
+
+## Styling with Bootstrap
+
+`base.html` loads Bootstrap 5.3.8's CSS and JavaScript bundle from the jsDelivr CDN, so the site needs
+an internet connection to look right. Both links include `integrity` (SRI) hashes, so the browser refuses
+the files if the CDN ever serves something different. `static/style.css` adds a few small extras on top,
+like the dark blue navbar and crossed-out completed tasks.
+
+### Delete confirmation dialog
+
+Each task's **Delete** button opens one shared Bootstrap modal. It doesn't delete anything by itself:
+
+1. When the modal opens, a short script in `dashboard.html` reads the clicked button's
+   `data-task-title` and `data-delete-url` attributes. It shows the title in the modal (as plain
+   text) and points the modal's form at that task's `/tasks/<id>/delete` URL.
+2. **Delete task** sends a POST to that URL. **Cancel**, the **X** button, the Escape key, or clicking
+   outside the dialog close it without sending anything, and the script then clears the form's URL.
+3. For keyboard and screen reader users, focus starts on **Cancel**. Tab and Shift+Tab stay inside the
+   dialog, and focus returns to the Delete button that opened it when it closes. The dialog is
+   labelled "Delete task?", and each Delete button has a hidden label naming its task, like
+   "Delete: Buy milk".
 
 ## Pages
 
@@ -96,7 +120,8 @@ miniproject5coytmauch/
 │   ├── tasks.py           # Dashboard, add, edit, complete, and delete tasks
 │   ├── schema.sql         # Creates the users and tasks tables
 │   ├── static/
-│   │   └── style.css
+│   │   ├── favicon.svg    # Browser tab icon
+│   │   └── style.css      # Small additions on top of Bootstrap
 │   └── templates/
 │       ├── base.html      # Shared layout every page extends
 │       ├── home.html
@@ -112,10 +137,12 @@ miniproject5coytmauch/
 ├── tests/
 │   ├── conftest.py        # pytest fixtures (app, client, CLI runner, and auth helper)
 │   ├── data.sql           # Two test users, each with one task
-│   ├── test_auth.py       # Tests for registration, login, and logout
-│   ├── test_db.py         # Tests for the database and init-db
-│   ├── test_factory.py    # Tests for the factory, secret key, page layout, and error pages
-│   └── test_tasks.py      # Tests for every task action, validation, and task privacy
+│   ├── test_auth.py       # Registration, login, logout, and invalid passwords
+│   ├── test_browser.py    # The delete modal and navbar in a real browser (optional, see below)
+│   ├── test_db.py         # Database, foreign keys, and init-db
+│   ├── test_factory.py    # Factory, secret key, all seven pages, nav, and error pages
+│   ├── test_project.py    # Header comments, templates, requirements.txt, and .gitignore
+│   └── test_tasks.py      # Every task action, route protection, alerts, and task privacy
 ├── requirements.txt
 └── README.md
 ```
@@ -136,7 +163,7 @@ These commands are for Windows PowerShell, run from the project folder.
 2. Install the dependencies:
 
    ```powershell
-   pip install Flask pytest
+   pip install -r requirements.txt
    ```
 
 3. Create the database:
@@ -164,3 +191,21 @@ python -m pytest
 
 Use `python -m pytest` rather than `pytest` so the project folder is on the import path and the
 tests can import the `tasktracker` package.
+
+**Your data is safe.** Every test gets its own new SQLite database in a temporary folder, filled with
+two test users from `tests/data.sql`. The tests never open `instance/tasktracker.sqlite`, and as an
+extra safety net, `conftest.py` fails the test run if that file changes while the tests run.
+
+### Browser tests (optional)
+
+`tests/test_browser.py` checks the Bootstrap delete modal and the phone-size navbar in a real copy
+of Microsoft Edge, because only a real browser runs Bootstrap's JavaScript. pytest skips these tests
+unless Selenium is installed:
+
+```powershell
+pip install selenium
+python -m pytest
+```
+
+They need Microsoft Edge and an internet connection, since Bootstrap loads from a CDN. Selenium
+downloads the matching Edge driver automatically the first time.

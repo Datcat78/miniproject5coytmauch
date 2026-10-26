@@ -4,41 +4,93 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}{% endblock %} - Task Tracker</title>
+  <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
+        integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB"
+        crossorigin="anonymous">
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
-<body>
-  <nav>
-    <h1><a href="{{ url_for('home') }}">Task Tracker</a></h1>
-    <ul>
-      <li><a href="{{ url_for('home') }}">Home</a></li>
-      <li><a href="{{ url_for('about') }}">About</a></li>
-      {% if g.user %}
-        <li><a href="{{ url_for('tasks.dashboard') }}">Dashboard</a></li>
-        <li><a href="{{ url_for('tasks.new') }}">Add Task</a></li>
-        <li><span class="nav-user">{{ g.user['username'] }}</span></li>
-        <li>
-          {# Logging out changes state, so it's a POST form instead of a link #}
-          <form action="{{ url_for('auth.logout') }}" method="post" class="nav-form">
-            <button type="submit">Log Out</button>
-          </form>
-        </li>
-      {% else %}
-        <li><a href="{{ url_for('auth.register') }}">Register</a></li>
-        <li><a href="{{ url_for('auth.login') }}">Log In</a></li>
-      {% endif %}
-    </ul>
+<body class="d-flex flex-column min-vh-100 bg-body-tertiary">
+  <a class="visually-hidden-focusable position-absolute top-0 start-0 m-2 px-3 py-2 bg-body rounded shadow"
+     href="#main-content">Skip to main content</a>
+
+  {# One nav link; marked active (for sighted and screen reader users) on its own page #}
+  {% macro nav_link(endpoint, text) %}
+    {% set active = request.endpoint == endpoint %}
+    <li class="nav-item">
+      <a class="nav-link{% if active %} active{% endif %}" href="{{ url_for(endpoint) }}"
+         {%- if active %} aria-current="page"{% endif %}>{{ text }}</a>
+    </li>
+  {% endmacro %}
+
+  <nav class="navbar navbar-expand-md navbar-tasktracker shadow-sm" data-bs-theme="dark"
+       aria-label="Main navigation">
+    <div class="container">
+      <a class="navbar-brand fw-semibold" href="{{ url_for('home') }}">Task Tracker</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#main-nav"
+              aria-controls="main-nav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse" id="main-nav">
+        <ul class="navbar-nav me-auto">
+          {{ nav_link('home', 'Home') }}
+          {{ nav_link('about', 'About') }}
+          {% if g.user %}
+            {{ nav_link('tasks.dashboard', 'Dashboard') }}
+            {{ nav_link('tasks.new', 'Add Task') }}
+          {% endif %}
+        </ul>
+
+        <ul class="navbar-nav align-items-md-center gap-md-3">
+          {% if g.user %}
+            <li class="nav-item">
+              <span class="navbar-text">Signed in as <strong class="text-white">{{ g.user['username'] }}</strong></span>
+            </li>
+            <li class="nav-item py-2 py-md-0">
+              {# Logging out changes state, so it's a POST form instead of a link #}
+              <form action="{{ url_for('auth.logout') }}" method="post">
+                <button type="submit" class="btn btn-outline-light btn-sm">Log Out</button>
+              </form>
+            </li>
+          {% else %}
+            {{ nav_link('auth.register', 'Register') }}
+            {{ nav_link('auth.login', 'Log In') }}
+          {% endif %}
+        </ul>
+      </div>
+    </div>
   </nav>
 
-  <main class="content">
-    <header>
-      {% block header %}{% endblock %}
-    </header>
-    {% for category, message in get_flashed_messages(with_categories=true) %}
-      <div class="flash flash-{{ category }}" role="alert">{{ message }}</div>
-    {% endfor %}
-    {% block content %}{% endblock %}
+  <main id="main-content" class="container py-4 flex-grow-1">
+    <div class="{% block page_class %}{% endblock %}">
+      {# Pages that put their heading somewhere else (like Home) leave the header block empty #}
+      {% if self.header()|trim %}
+        <header class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+          {% block header %}{% endblock %}
+        </header>
+      {% endif %}
+
+      {# flash(message, category): success is green, error is red, info is blue #}
+      {% for category, message in get_flashed_messages(with_categories=true) %}
+        {% set alert_type = {'success': 'success', 'error': 'danger', 'info': 'info'}.get(category, 'secondary') %}
+        <div class="alert alert-{{ alert_type }} alert-dismissible fade show" role="alert">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      {% endfor %}
+
+      {% block content %}{% endblock %}
+    </div>
   </main>
 
-  <footer>INF601 Mini Project 5 &middot; Coyt Mauch</footer>
+  <footer class="py-3 border-top bg-body text-center text-body-secondary small">
+    INF601 Mini Project 5 &middot; Coyt Mauch
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+          integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
+          crossorigin="anonymous"></script>
+  {% block scripts %}{% endblock %}
 </body>
 </html>

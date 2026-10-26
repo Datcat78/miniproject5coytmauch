@@ -36,9 +36,11 @@ def test_about(client):
 
 def assert_uses_base_layout(response):
     """Check for parts of the page that only come from base.html."""
+    assert b"bootstrap@5.3.8/dist/css/bootstrap.min.css" in response.data
+    assert b"bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" in response.data
     assert b'href="/static/style.css"' in response.data
-    assert b"<nav>" in response.data
-    assert b"<footer>INF601 Mini Project 5" in response.data
+    assert b'<nav class="navbar' in response.data
+    assert b"INF601 Mini Project 5 &middot; Coyt Mauch" in response.data
 
 
 @pytest.mark.parametrize(("path", "title"), (
@@ -56,6 +58,33 @@ def test_every_page_uses_base_layout(client, auth, path, title):
     assert response.status_code == 200
     assert f"<title>{title} - Task Tracker</title>".encode() in response.data
     assert_uses_base_layout(response)
+
+
+@pytest.mark.parametrize(("path", "title"), (
+    ("/", "Home"),
+    ("/about", "About"),
+    ("/auth/register", "Register"),
+    ("/auth/login", "Log In"),
+))
+def test_public_pages_work_logged_out(client, path, title):
+    response = client.get(path)
+    assert response.status_code == 200
+    assert f"<title>{title} - Task Tracker</title>".encode() in response.data
+    assert_uses_base_layout(response)
+
+
+@pytest.mark.parametrize(("path", "link"), (
+    ("/", b'href="/" aria-current="page">Home'),
+    ("/about", b'href="/about" aria-current="page">About'),
+    ("/tasks/", b'href="/tasks/" aria-current="page">Dashboard'),
+    ("/tasks/new", b'href="/tasks/new" aria-current="page">Add Task'),
+))
+def test_nav_marks_current_page(client, auth, path, link):
+    auth.login()
+    response = client.get(path)
+    assert link in response.data
+    # Only one link is marked as the current page
+    assert response.data.count(b'aria-current="page"') == 1
 
 
 def test_error_page_uses_base_layout(client):

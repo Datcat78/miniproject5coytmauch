@@ -1,25 +1,37 @@
 {% extends 'base.html' %}
 
+{% block page_class %}page-medium{% endblock %}
+
 {% block header %}
-  <h1>{% block title %}Add Task{% endblock %}</h1>
+  <h1 class="h2 mb-0">{% block title %}Add Task{% endblock %}</h1>
 {% endblock %}
 
 {% block content %}
-  {# The browser checks these limits first; tasks.validate_task_form() checks them again on the server #}
-  <form method="post" class="form">
-    <label for="title">Title</label>
-    <input name="title" id="title" value="{{ request.form.get('title', '') }}"
-           required maxlength="100" aria-describedby="title-help" autofocus>
-    <small id="title-help">Up to 100 characters.</small>
+  <div class="card shadow-sm">
+    <div class="card-body p-4">
+      {# The browser checks these limits first; tasks.validate_task_form() checks them again on the server #}
+      <form method="post">
+        <div class="mb-3">
+          <label for="title" class="form-label">Title</label>
+          <input class="form-control" name="title" id="title" value="{{ request.form.get('title', '') }}"
+                 required maxlength="100" aria-describedby="title-help" autofocus>
+          <div id="title-help" class="form-text">Up to 100 characters.</div>
+        </div>
 
-    <label for="description">Description <span class="optional">(optional)</span></label>
-    <textarea name="description" id="description" maxlength="1000"
-              aria-describedby="description-help">{{ request.form.get('description', '') }}</textarea>
-    <small id="description-help">Up to 1000 characters.</small>
+        <div class="mb-4">
+          <label for="description" class="form-label">
+            Description <span class="text-body-secondary fw-normal">(optional)</span>
+          </label>
+          <textarea class="form-control" name="description" id="description" rows="5" maxlength="1000"
+                    aria-describedby="description-help">{{ request.form.get('description', '') }}</textarea>
+          <div id="description-help" class="form-text">Up to 1000 characters.</div>
+        </div>
 
-    <div class="form-actions">
-      <button type="submit" class="button">Add Task</button>
-      <a class="button button-secondary" href="{{ url_for('tasks.dashboard') }}">Cancel</a>
+        <div class="d-flex flex-wrap gap-2">
+          <button type="submit" class="btn btn-primary">Add Task</button>
+          <a class="btn btn-outline-secondary" href="{{ url_for('tasks.dashboard') }}">Cancel</a>
+        </div>
+      </form>
     </div>
-  </form>
+  </div>
 {% endblock %}

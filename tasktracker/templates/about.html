@@ -1,16 +1,23 @@
 {% extends 'base.html' %}
 
+{% block page_class %}page-medium{% endblock %}
+
 {% block header %}
-  <h1>{% block title %}About{% endblock %}</h1>
+  <h1 class="h2 mb-0">{% block title %}About{% endblock %}</h1>
 {% endblock %}
 
 {% block content %}
-  <p>Task Tracker is a task manager website built with Flask for Mini Project 5 in
-     INF601 - Advanced Programming in Python at Fort Hays State University.</p>
-  <ul>
-    <li><strong>Author:</strong> Coyt Mauch</li>
-    <li><strong>Framework:</strong> Flask, using an application factory and blueprints</li>
-    <li><strong>Templates:</strong> Jinja, with every page extending a shared base layout</li>
-    <li><strong>Database:</strong> SQLite</li>
-  </ul>
+  <div class="card shadow-sm">
+    <div class="card-body p-4">
+      <p class="card-text">Task Tracker is a task manager website built with Flask for Mini Project 5 in
+         INF601 - Advanced Programming in Python at Fort Hays State University.</p>
+    </div>
+    <ul class="list-group list-group-flush">
+      <li class="list-group-item"><strong>Author:</strong> Coyt Mauch</li>
+      <li class="list-group-item"><strong>Framework:</strong> Flask, using an application factory and blueprints</li>
+      <li class="list-group-item"><strong>Templates:</strong> Jinja, with every page extending a shared base layout</li>
+      <li class="list-group-item"><strong>Styling:</strong> Bootstrap 5.3</li>
+      <li class="list-group-item"><strong>Database:</strong> SQLite</li>
+    </ul>
+  </div>
 {% endblock %}

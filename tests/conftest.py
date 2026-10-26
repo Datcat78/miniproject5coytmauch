@@ -2,6 +2,7 @@
 # Coyt Mauch
 # Mini Project 5
 
+import hashlib
 import os
 
 import pytest
@@ -9,8 +10,30 @@ import pytest
 from tasktracker import create_app
 from tasktracker.db import get_db, init_db
 
+PROJECT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# The real database that "flask --app tasktracker init-db" creates; tests must never touch it
+DEV_DATABASE = os.path.join(PROJECT_DIR, "instance", "tasktracker.sqlite")
+
 with open(os.path.join(os.path.dirname(__file__), "data.sql"), "rb") as f:
     _data_sql = f.read().decode("utf8")
+
+
+def _file_fingerprint(path):
+    """SHA-256 of a file's contents, or None if it doesn't exist."""
+    if not os.path.exists(path):
+        return None
+    with open(path, "rb") as f:
+        return hashlib.sha256(f.read()).hexdigest()
+
+
+@pytest.fixture(scope="session", autouse=True)
+def protect_dev_database():
+    """Fail the test run if any test changed (or deleted) the development database."""
+    before = _file_fingerprint(DEV_DATABASE)
+    yield
+    assert _file_fingerprint(DEV_DATABASE) == before, (
+        "A test changed instance/tasktracker.sqlite. Tests must use the temporary database."
+    )
 
 
 @pytest.fixture

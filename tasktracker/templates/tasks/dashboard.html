@@ -1,45 +1,173 @@
 {% extends 'base.html' %}
 
 {% block header %}
-  <h1>{% block title %}Dashboard{% endblock %}</h1>
-  <a class="button action" href="{{ url_for('tasks.new') }}">Add Task</a>
+  <div>
+    <h1 class="h2 mb-1">{% block title %}Dashboard{% endblock %}</h1>
+    <p class="text-body-secondary mb-0">Welcome, {{ g.user['username'] }}.
+      {%- if tasks %} You have completed {{ completed_count }} of {{ tasks|length }} tasks.{% endif %}</p>
+  </div>
+  <a class="btn btn-primary" href="{{ url_for('tasks.new') }}">Add Task</a>
 {% endblock %}
 
 {% block content %}
-  <p>Welcome, {{ g.user['username'] }}.
-    {%- if tasks %} You have completed {{ completed_count }} of {{ tasks|length }} tasks.{% endif %}</p>
-
   {% if tasks %}
-    <ul class="task-list">
-      {% for task in tasks %}
-        <li class="task{% if task['is_complete'] %} task-complete{% endif %}">
-          <div class="task-heading">
-            <h2>{{ task['title'] }}</h2>
-            <span class="status">{{ 'Complete' if task['is_complete'] else 'Not complete' }}</span>
-          </div>
-          {% if task['description'] %}
-            <p>{{ task['description'] }}</p>
-          {% endif %}
+    {% set percent = (completed_count / tasks|length * 100)|round|int %}
+    <div class="progress mb-4" role="progressbar" aria-label="Tasks completed"
+         aria-valuenow="{{ percent }}" aria-valuemin="0" aria-valuemax="100"
+         aria-valuetext="{{ completed_count }} of {{ tasks|length }} tasks completed">
+      <div class="progress-bar bg-success" style="width: {{ percent }}%"></div>
+    </div>
 
-          {# Completing and deleting change data, so they're POST forms, not links #}
-          <div class="task-actions">
-            <form action="{{ url_for('tasks.toggle', task_id=task['id']) }}" method="post">
-              <button type="submit" class="button button-small">
-                {{ 'Mark not complete' if task['is_complete'] else 'Mark complete' }}
-              </button>
-            </form>
-            <a class="button button-small button-secondary"
-               href="{{ url_for('tasks.edit', task_id=task['id']) }}">Edit</a>
-            <form action="{{ url_for('tasks.delete', task_id=task['id']) }}" method="post"
-                  onsubmit="return confirm('Delete this task? This cannot be undone.');">
-              <button type="submit" class="button button-small button-danger">Delete</button>
-            </form>
-          </div>
-        </li>
+    <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-3">
+      {% for task in tasks %}
+        <div class="col">
+          <article class="card h-100 shadow-sm{% if task['is_complete'] %} task-complete{% endif %}">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+                <h2 class="h5 card-title mb-0 text-break">{{ task['title'] }}</h2>
+                {% if task['is_complete'] %}
+                  <span class="badge text-bg-success">Complete</span>
+                {% else %}
+                  <span class="badge text-bg-secondary">Not complete</span>
+                {% endif %}
+              </div>
+              {% if task['description'] %}
+                <p class="card-text task-description text-break">{{ task['description'] }}</p>
+              {% else %}
+                <p class="card-text text-body-secondary fst-italic">No description</p>
+              {% endif %}
+            </div>
+
+            {# The hidden text gives each button a unique name for screen readers, like "Edit: Buy milk" #}
+            <div class="card-footer bg-transparent d-flex flex-wrap gap-2">
+              <form action="{{ url_for('tasks.toggle', task_id=task['id']) }}" method="post">
+                <button type="submit" class="btn btn-sm btn-outline-success">
+                  {{- 'Mark not complete' if task['is_complete'] else 'Mark complete' -}}
+                  <span class="visually-hidden">: {{ task['title'] }}</span>
+                </button>
+              </form>
+              <a class="btn btn-sm btn-outline-primary" href="{{ url_for('tasks.edit', task_id=task['id']) }}">
+                {{- 'Edit' -}}<span class="visually-hidden">: {{ task['title'] }}</span></a>
+              {# Opens the confirmation modal below; it doesn't delete anything by itself #}
+              <button type="button" class="btn btn-sm btn-outline-danger ms-auto"
+                      data-bs-toggle="modal" data-bs-target="#delete-task-modal"
+                      data-task-title="{{ task['title'] }}"
+                      data-delete-url="{{ url_for('tasks.delete', task_id=task['id']) }}">
+                {{- 'Delete' -}}<span class="visually-hidden">: {{ task['title'] }}</span></button>
+            </div>
+          </article>
+        </div>
       {% endfor %}
-    </ul>
+    </div>
+
+    {# One shared modal for every task. The script below fills in the task title and the
+       form's action from the Delete button that opened it. #}
+    <div class="modal fade" id="delete-task-modal" tabindex="-1"
+         aria-labelledby="delete-task-modal-title" aria-describedby="delete-task-modal-body"
+         aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <form method="post" id="delete-task-form">
+            <div class="modal-header">
+              <h2 class="modal-title fs-5" id="delete-task-modal-title">Delete task?</h2>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <p class="mb-0" id="delete-task-modal-body">
+                Are you sure you want to delete &ldquo;<strong id="delete-task-title" class="text-break"></strong>&rdquo;?
+                This cannot be undone.
+              </p>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
+                      id="delete-task-cancel">Cancel</button>
+              <button type="submit" class="btn btn-danger" id="delete-task-confirm">Delete task</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
   {% else %}
-    <p class="empty">You don't have any tasks yet.
-      <a href="{{ url_for('tasks.new') }}">Add your first task</a>.</p>
+    <div class="card shadow-sm text-center">
+      <div class="card-body py-5">
+        <h2 class="h5">You don't have any tasks yet.</h2>
+        <p class="text-body-secondary">Add your first task to get started.</p>
+        <a class="btn btn-primary" href="{{ url_for('tasks.new') }}">Add your first task</a>
+      </div>
+    </div>
   {% endif %}
+{% endblock %}
+
+{% block scripts %}
+  <script>
+    // Connect the shared delete modal to whichever Delete button opened it
+    (() => {
+      const modal = document.getElementById("delete-task-modal");
+      if (!modal) {
+        return;  // No tasks, so there is no modal on the page
+      }
+      const form = document.getElementById("delete-task-form");
+      const title = document.getElementById("delete-task-title");
+      const cancelButton = document.getElementById("delete-task-cancel");
+      const confirmButton = document.getElementById("delete-task-confirm");
+
+      modal.addEventListener("show.bs.modal", (event) => {
+        const deleteButton = event.relatedTarget;  // The Delete button that was clicked
+        if (!deleteButton) {
+          event.preventDefault();  // Opened some other way: there's no task to delete
+          return;
+        }
+        form.action = deleteButton.dataset.deleteUrl;
+        // textContent shows the title as plain text, so it can never run as HTML
+        title.textContent = deleteButton.dataset.taskTitle;
+        confirmButton.disabled = false;
+      });
+
+      // Start keyboard focus on Cancel, the safe choice
+      modal.addEventListener("shown.bs.modal", () => cancelButton.focus());
+
+      // Bootstrap keeps focus inside the modal, but the modal is the last thing on
+      // the page, so Tab on its last button would jump out to the browser's address
+      // bar. Wrap around to the first button instead (and the reverse for Shift+Tab).
+      modal.addEventListener("keydown", (event) => {
+        if (event.key !== "Tab") {
+          return;
+        }
+        const buttons = modal.querySelectorAll("button:not([disabled])");
+        const first = buttons[0];
+        const last = buttons[buttons.length - 1];
+
+        if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault();
+          first.focus();
+        } else if (event.shiftKey && document.activeElement === first) {
+          event.preventDefault();
+          last.focus();
+        }
+      });
+
+      // While closing, Bootstrap hides the modal from screen readers (aria-hidden),
+      // which browsers block if a button inside still has focus. Let go of that
+      // focus first; Bootstrap then returns it to the Delete button that opened the modal.
+      modal.addEventListener("hide.bs.modal", () => {
+        if (modal.contains(document.activeElement)) {
+          document.activeElement.blur();
+        }
+      });
+
+      // Forget the task once the modal closes, so a later submit can't delete it
+      modal.addEventListener("hidden.bs.modal", () => {
+        form.removeAttribute("action");
+        title.textContent = "";
+      });
+
+      form.addEventListener("submit", (event) => {
+        if (!form.getAttribute("action")) {
+          event.preventDefault();  // No task chosen
+          return;
+        }
+        confirmButton.disabled = true;  // Stop a double click from sending two requests
+      });
+    })();
+  </script>
 {% endblock %}

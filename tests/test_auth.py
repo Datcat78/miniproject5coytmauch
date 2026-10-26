@@ -108,6 +108,8 @@ def test_login(client, auth):
 @pytest.mark.parametrize(("username", "password", "message"), (
     ("nobody", "test-password", b"Incorrect username or password."),
     ("test", "wrong-password", b"Incorrect username or password."),
+    ("test", "TEST-PASSWORD", b"Incorrect username or password."),   # passwords are case-sensitive
+    ("other", "test-password", b"Incorrect username or password."),  # another user's password
     ("", "test-password", b"Username and password are required."),
     ("test", "", b"Username and password are required."),
 ))
@@ -130,6 +132,21 @@ def test_logout(client, auth):
     assert response.headers["Location"] == "/"
 
 
+def test_session_stores_only_the_user_id(client, auth):
+    auth.login()
+    with client.session_transaction() as sess:
+        assert dict(sess) == {"user_id": 1}
+
+
+def test_logout_blocks_private_pages(client, auth):
+    auth.login()
+    assert client.get("/tasks/").status_code == 200
+
+    auth.logout()
+    response = client.get("/tasks/")
+    assert response.headers["Location"] == "/auth/login"
+
+
 def test_logout_requires_post(client, auth):
     auth.login()
     assert client.get("/auth/logout").status_code == 405
@@ -147,5 +164,5 @@ def test_nav_links(client, auth):
     auth.login()
     response = client.get("/")
     assert b"Log Out" in response.data
-    assert b'<span class="nav-user">test</span>' in response.data
+    assert b'Signed in as <strong class="text-white">test</strong>' in response.data
     assert b"Log In" not in response.data
